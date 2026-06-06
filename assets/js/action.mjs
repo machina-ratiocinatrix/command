@@ -8,9 +8,9 @@ import {
   llmSoupToText
 } from './utilities.mjs';
 import {
-  showTokenPopup,
-  hideTokenPopup
-} from './token_popup.mjs';
+  showcommandPopup,
+  hidecommandPopup
+} from './command_popup.mjs';
 
 /**
  * Manages the entire state and behavior of the machine page application.
@@ -72,7 +72,7 @@ class MachineApp {
       if (['temperature'].includes(key)) {
         const numValue = parseFloat(value);
         this.settings.llm[key] = isNaN(numValue) ? value : numValue;
-      } else if (['max_output_tokens'].includes(key)) {
+      } else if (['max_output_commands'].includes(key)) {
         const numValue = parseInt(value, 10);
         this.settings.llm[key] = isNaN(numValue) ? value : numValue;
       } else if (['instructions_file'].includes(key)) {
@@ -93,10 +93,10 @@ class MachineApp {
       textarea: document.getElementById('dialogue-editor-textarea'),
       filePickerContainer: document.getElementById('file-picker-container'),
       chooseFileButton: document.getElementById('chooseFileButton'),
-      tokenPopupSaveButton: document.getElementById('tokenPopupSaveButton'),
-      tokenPopupCancelButton: document.getElementById('tokenPopupCancelButton'),
+      commandPopupSaveButton: document.getElementById('commandPopupSaveButton'),
+      commandPopupCancelButton: document.getElementById('commandPopupCancelButton'),
       loadingOverlay: document.getElementById('loading-overlay'),
-      tokenPopupInput: document.getElementById('tokenPopupInput'),
+      commandPopupInput: document.getElementById('commandPopupInput'),
     };
     
     // Make the dialogue wrapper programmatically focusable
@@ -109,8 +109,8 @@ class MachineApp {
    * We use arrow functions for handlers to ensure `this` refers to the class instance.
    */
   _attachEventListeners() {
-    this.elements.tokenPopupSaveButton.addEventListener('click', this._handleTokenSave);
-    this.elements.tokenPopupCancelButton.addEventListener('click', hideTokenPopup);
+    this.elements.commandPopupSaveButton.addEventListener('click', this._handlecommandSave);
+    this.elements.commandPopupCancelButton.addEventListener('click', hideCommandPopup);
     this.elements.chooseFileButton.addEventListener('click', this._handleFilePick);
     this.elements.dialogueWrapper.addEventListener('click', this.switchToEditMode);
     this.elements.textarea.addEventListener('keydown', this._handleEditorSave);
@@ -128,15 +128,15 @@ class MachineApp {
   }
   
   // --- Event Handlers & Core Logic Methods ---
-  _handleTokenSave = () => {
-    const tokenInputVal = this.elements.tokenPopupInput.value;
-    if (tokenInputVal && tokenInputVal.trim()) {
-      this.settings.llm.token = tokenInputVal.trim();
-      console.log('Token set manually via pop-up.');
-      hideTokenPopup();
-      this.runLm(); // Optionally, re-trigger the LLM run after getting the token
+  _handleCommandSave = () => {
+    const commandInputVal = this.elements.commandPopupInput.value;
+    if (commandInputVal && commandInputVal.trim()) {
+      this.settings.llm.command = commandInputVal.trim();
+      console.log('Command set manually via pop-up.');
+      hideCommandPopup();
+      this.runLm(); // Optionally, re-trigger the LLM run after getting the command
     } else {
-      alert('Please enter a valid API token.');
+      alert('Please enter a valid command.');
     }
   };
   

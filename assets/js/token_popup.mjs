@@ -1,17 +1,17 @@
-export function showTokenPopup() {
-  const popup = document.getElementById('tokenPopupOverlay');
-  const input = document.getElementById('tokenPopupInput');
+export function showCommandPopup() {
+  const popup = document.getElementById('commandPopupOverlay');
+  const input = document.getElementById('commandPopupInput');
   if (popup && input) {
     input.value = '';
     popup.style.display = 'flex';
     input.focus();
   } else {
-    console.error('Token pop-up elements (tokenPopupOverlay or tokenPopupInput) not found. Ensure HTML is present.');
-    alert('Error: Token input dialog is missing. Cannot proceed without a token if fetch fails.');
+    console.error('Command pop-up elements (commandPopupOverlay or commandPopupInput) not found. Ensure HTML is present.');
+    alert('Error: Command input dialog is missing. Cannot proceed without a command.');
   }
 }
-export function hideTokenPopup() {
-  const popup = document.getElementById('tokenPopupOverlay');
+export function hideCommandPopup() {
+  const popup = document.getElementById('commandPopupOverlay');
   if (popup) {
     popup.style.display = 'none';
   }

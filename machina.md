@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Multilogue
+title: Command
 ---
 <div id="machina-config"
      data-machine-settings="{{ site.machine | jsonify | escape }}"
@@ -11,13 +11,13 @@ title: Multilogue
      style="display:none;">
 </div>
 
-<div id="tokenPopupOverlay" class="popup-overlay" style="display: none;">
+<div id="commandPopupOverlay" class="popup-overlay" style="display: none;">
     <div class="popup">
-        <h3>Enter your identification (API) token</h3>
-        <input type="text" id="tokenPopupInput" placeholder="Paste your API token here, it will be used until the end of this session...">
+        <h3>Enter the command (verb)</h3>
+        <input type="text" id="commandPopupInput" placeholder="Use the verb describing the semantic action that needs to be taken...">
         <div style="margin-top: 10px;">
-            <button id="tokenPopupSaveButton" style="margin-right: 10px;">Use this token, go on</button>
-            <button id="tokenPopupCancelButton">Cancel</button>
+            <button id="commandPopupSaveButton" style="margin-right: 10px;">Use this command, go!</button>
+            <button id="commandPopupCancelButton">Cancel</button>
         </div>
     </div>
 </div>

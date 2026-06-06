@@ -8,15 +8,16 @@ include:
   - README.md
   - LICENSE.md
 url: https://machina-ratiocinatrix.github.io
+baseurl: /command
 
-title: Machina Ratiocinatrix
-description: Machina Ratiocinatrix is a term used by Norbert Wiener in the introduction to his book Cybernetics, or Control and Communication in the Animal and the Machine
+title: Command
+description: Command and response.
 
 machine:
   name: Machina-Ratiocinatrix
   verb: Machina
   instructions_file: machina_ratiocinatrix.md
-  token: openai
+  command: openai
   server: https://localhost:443
   apiUrl: https://api.openai.com/v1/responses
 
