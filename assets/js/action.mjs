@@ -302,44 +302,19 @@ class MachineApp {
     if (this.settings.llm.command) return true;
     
     try {
-      const commandResponse = await fetch(this.settings.machine.server + '/token/' + this.settings.machine.command, {mode: "cors"});
-      if (!commandResponse.ok) {
-        throw new Error(`Server responded with status: ${commandResponse.status}`);
-      }
-      const fetchedCommand = (await commandResponse.text()).trim();
-      if (!fetchedCommand) {
-        throw new Error("Fetched command is empty.");
-      }
-      this.settings.llm.command = fetchedCommand;
-      console.log('Command fetched successfully from server.');
+      showCommandPopup(); // Show pop-up to ask for command
       return true;
     } catch (fetchError) {
-      // Is it because of the debug on the local server?
-      try {
-        const commandResponse = await fetch('https://localhost:8443/command/' + this.settings.machine.command, {mode: "cors"});
-        if (!commandResponse.ok) {
-          throw new Error(`Server responded with status: ${commandResponse.status}`);
-        }
-        const fetchedCommand = (await commandResponse.text()).trim();
-        if (!fetchedCommand) {
-          throw new Error("Fetched command is empty.");
-        }
-        this.settings.llm.command = fetchedCommand;
-        this.settings.machine.server = 'https://localhost:8443'
-        console.log(`Command fetched successfully from the debug server; server URL updated to ${this.settings.machine.server}`);
-        return true;
-      } catch (fetchError2) {
-        console.error('Command fetch failed:', fetchError.message);
-        showCommandPopup(); // Show pop-up to ask for command
-        return false; // Indicate that we couldn't get a command
+      console.error('Command fetch failed');
+      showCommandPopup(); // Show pop-up to ask for command
+      return false; // Indicate that we couldn't get a command
       }
-    }
   };
   
   runLlm = async () => {
     const hasCommand = await this._ensureCommand();
     if (!hasCommand) {
-      console.log('LLM run aborted: No API command available.');
+      console.log('Execution aborted, no command provided.');
       return;
     }
     
