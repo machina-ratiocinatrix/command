@@ -1,7 +1,6 @@
 import {
   platoHtmlToPlatoText,
   platoTextToPlatoHtml,
-  platoTextToCmj,
   platoHtmlToCmj,
   platoHtmlToMuj,
   CmjToPlatoText,
@@ -72,7 +71,7 @@ class MachineApp {
       if (['temperature'].includes(key)) {
         const numValue = parseFloat(value);
         this.settings.llm[key] = isNaN(numValue) ? value : numValue;
-      } else if (['max_output_commands'].includes(key)) {
+      } else if (['max_output_tokens'].includes(key)) {
         const numValue = parseInt(value, 10);
         this.settings.llm[key] = isNaN(numValue) ? value : numValue;
       } else if (['instructions_file'].includes(key)) {
@@ -109,7 +108,7 @@ class MachineApp {
    * We use arrow functions for handlers to ensure `this` refers to the class instance.
    */
   _attachEventListeners() {
-    this.elements.commandPopupSaveButton.addEventListener('click', this._handlecommandSave);
+    this.elements.commandPopupSaveButton.addEventListener('click', this._handleCommandSave);
     this.elements.commandPopupCancelButton.addEventListener('click', hideCommandPopup);
     this.elements.chooseFileButton.addEventListener('click', this._handleFilePick);
     this.elements.dialogueWrapper.addEventListener('click', this.switchToEditMode);
@@ -118,8 +117,7 @@ class MachineApp {
     
     // Listen for custom events and browser events
     window.addEventListener('localStorageChanged', this.updateDisplayState);
-    window.addEventListener('localStorageUpdated', this.updateDisplayState);
-    window.addEventListener('runMachineCommand', this.runLm);
+    window.addEventListener('runMachineCommand', this.runLlm);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
         this.updateDisplayState();
@@ -128,15 +126,16 @@ class MachineApp {
   }
   
   // --- Event Handlers & Core Logic Methods ---
+  
   _handleCommandSave = () => {
     const commandInputVal = this.elements.commandPopupInput.value;
     if (commandInputVal && commandInputVal.trim()) {
       this.settings.llm.command = commandInputVal.trim();
       console.log('Command set manually via pop-up.');
       hideCommandPopup();
-      this.runLm(); // Optionally, re-trigger the LLM run after getting the command
+      this.runLlm(); // Optionally, re-trigger the LLM run after getting the command
     } else {
-      alert('Please enter a valid command.');
+      alert('Please enter a valid API command.');
     }
   };
   
@@ -241,7 +240,7 @@ class MachineApp {
     }
     if (event.altKey && event.shiftKey) {
       event.preventDefault();
-      this.runLm();
+      this.runLlm();
     }
   };
   
@@ -299,32 +298,78 @@ class MachineApp {
     }
   };
   
-  runLm = async () => {
-    const textToSend = localStorage.getItem('multilogue') || '';
-    if (!textToSend || textToSend.trim() === '') {
-      alert('Multilogue is empty. Please add some content first.');
+  _ensureCommand = async () => {
+    if (this.settings.llm.command) return true;
+    
+    try {
+      const commandResponse = await fetch(this.settings.machine.server + '/token/' + this.settings.machine.command, {mode: "cors"});
+      if (!commandResponse.ok) {
+        throw new Error(`Server responded with status: ${commandResponse.status}`);
+      }
+      const fetchedCommand = (await commandResponse.text()).trim();
+      if (!fetchedCommand) {
+        throw new Error("Fetched command is empty.");
+      }
+      this.settings.llm.command = fetchedCommand;
+      console.log('Command fetched successfully from server.');
+      return true;
+    } catch (fetchError) {
+      // Is it because of the debug on the local server?
+      try {
+        const commandResponse = await fetch('https://localhost:8443/command/' + this.settings.machine.command, {mode: "cors"});
+        if (!commandResponse.ok) {
+          throw new Error(`Server responded with status: ${commandResponse.status}`);
+        }
+        const fetchedCommand = (await commandResponse.text()).trim();
+        if (!fetchedCommand) {
+          throw new Error("Fetched command is empty.");
+        }
+        this.settings.llm.command = fetchedCommand;
+        this.settings.machine.server = 'https://localhost:8443'
+        console.log(`Command fetched successfully from the debug server; server URL updated to ${this.settings.machine.server}`);
+        return true;
+      } catch (fetchError2) {
+        console.error('Command fetch failed:', fetchError.message);
+        showCommandPopup(); // Show pop-up to ask for command
+        return false; // Indicate that we couldn't get a command
+      }
+    }
+  };
+  
+  runLlm = async () => {
+    const hasCommand = await this._ensureCommand();
+    if (!hasCommand) {
+      console.log('LLM run aborted: No API command available.');
       return;
     }
     
-    const originalHtml = this.elements.dialogueWrapper.innerHTML
+    const htmlContent = this.elements.dialogueWrapper.innerHTML;
+    if (!htmlContent || htmlContent.trim() === '') {
+      alert('Dialogue is empty. Please add some content first.');
+      return;
+    }
+    
     console.log('Preparing to send dialogue to LLM worker...');
     this.elements.loadingOverlay.style.display = 'flex';
     
     try {
-      // const cmjMessages = platoHtmlToCmj(htmlContent, this.settings.machine.name);
+      const cmjMessages = platoHtmlToCmj(htmlContent, this.settings.machine.name);
+      const mujMessages = platoHtmlToMuj(htmlContent, this.settings.machine.name)
+      
       const workerPayload = {
         config: this.settings.machine,
-        text: textToSend
+        settings: this.settings.llm,
+        messages: mujMessages
       };
       
-      console.log('Launching Local Machine worker with payload:', workerPayload);
+      console.log('Launching LLM worker with payload:', workerPayload);
       const llmWorker = new Worker(this.settings.workerUrl);
       
       llmWorker.onmessage = (e) => {
         this.elements.loadingOverlay.style.display = 'none';
         console.log('Main thread: Message received from worker:', e.data);
         if (e.data.type === 'success') {
-          this._processLocalMachineResponse(e.data.data, originalHtml);
+          this._processLlmResponse(e.data.data, cmjMessages);
         } else if (e.data.type === 'error') {
           console.error('Main thread: Error message from worker:', e.data.error);
           alert(`Worker reported an error: ${e.data.error}`);
@@ -349,23 +394,52 @@ class MachineApp {
     }
   };
   
-  _processLocalMachineResponse = (lmResponseData, originalHtmlText) => {
+  _processLlmResponse = (llmResponseData, originalCmjMessages) => {
     try {
-      console.log('Worker task successful. Local Machine Response:', lmResponseData);
-      if (!lmResponseData) {
+      console.log('Worker task successful. LLM Response:', llmResponseData);
+      if (!llmResponseData) {
         throw new Error('LLM response is missing message content.');
       }
       
-      const additionalHtml = platoTextToPlatoHtml(lmResponseData)
+      const regularText = llmResponseData
+        .filter(item => item.type === 'message' && Array.isArray(item.content))
+        .flatMap(item =>
+          item.content
+            .filter(contentPart => contentPart && typeof contentPart.text === 'string')
+            .map(contentPart => contentPart.text)
+        )
+        .join(' ');
       
-      const newHtmlText = originalHtmlText + additionalHtml
-      const updatedPlatoText = platoHtmlToPlatoText(newHtmlText);
+      const desoupedText = llmSoupToText(regularText);
+      console.log('Regular text:', desoupedText);
+      
+      const thoughtsText = llmResponseData
+        .filter(item => item.type === 'reasoning' && Array.isArray(item.summary))
+        .flatMap(item =>
+          item.summary
+            .filter(contentPart => contentPart && typeof contentPart.text === 'string')
+            .map(contentPart => contentPart.text)
+        )
+        .join('\n');
+      
+      const desoupedThoughts = llmSoupToText(thoughtsText);
+      console.log('Thoughts text:', desoupedThoughts);
+      
+      const newCmjMessage = {
+        role: 'assistant',
+        name: this.settings.machine.name,
+        content: desoupedText
+      };
+      
+      const updatedCmjMessages = [...originalCmjMessages, newCmjMessage];
+      const updatedPlatoText = CmjToPlatoText(updatedCmjMessages);
       
       if (typeof updatedPlatoText !== 'string') {
         throw new Error('Failed to convert updated CMJ to PlatoText.');
       }
       
       localStorage.setItem('multilogue', updatedPlatoText);
+      localStorage.setItem('thoughts', desoupedThoughts);
       
       this.updateDisplayState();
       console.log('Dialogue updated with LLM response.');
