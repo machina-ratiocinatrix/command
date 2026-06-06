@@ -300,15 +300,8 @@ class MachineApp {
   
   _ensureCommand = async () => {
     if (this.settings.llm.command) return true;
-    
-    try {
-      showCommandPopup(); // Show pop-up to ask for command
-      return true;
-    } catch (fetchError) {
-      console.error('Command fetch failed');
-      showCommandPopup(); // Show pop-up to ask for command
-      return false; // Indicate that we couldn't get a command
-      }
+    showCommandPopup(); // Show pop-up to ask for command
+    return false; // Indicate that we couldn't get a command
   };
   
   runLlm = async () => {
