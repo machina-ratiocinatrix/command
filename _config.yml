@@ -16,7 +16,7 @@ description: Command and response.
 machine:
   name: Machina-Ratiocinatrix
   verb: think
-  command: think
+  command:
   server: https://localhost:443
 
 app:

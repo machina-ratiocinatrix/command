@@ -130,7 +130,7 @@ class MachineApp {
   _handleCommandSave = () => {
     const commandInputVal = this.elements.commandPopupInput.value;
     if (commandInputVal && commandInputVal.trim()) {
-      this.settings.machine.verb = commandInputVal.trim();
+      this.settings.machine.command = commandInputVal.trim();
       console.log('Command set manually via pop-up.');
       hideCommandPopup();
       this.runLlm(); // Optionally, re-trigger the LLM run after getting the command
@@ -299,7 +299,7 @@ class MachineApp {
   };
   
   _ensureCommand = async () => {
-    if (this.settings.machine.verb) return true;
+    if (this.settings.machine.command) return true;
     showCommandPopup(); // Show pop-up to ask for command
     return false; // Indicate that we couldn't get a command
   };
@@ -307,10 +307,11 @@ class MachineApp {
   runLlm = async () => {
     const hasCommand = await this._ensureCommand();
     if (!hasCommand) {
-      console.log('Execution aborted, no command provided.');
+      console.log('No command provided, using the default verb');
       return;
+    } else {
+      this.settings.machine.verb = this.settings.machine.command
     }
-    
     const textToSend = localStorage.getItem('multilogue') || '';
     if (!textToSend || textToSend.trim() === '') {
       alert('Multilogue is empty. Please add some content first.');
