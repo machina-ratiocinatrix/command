@@ -15,11 +15,9 @@ description: Command and response.
 
 machine:
   name: Machina-Ratiocinatrix
-  verb: Machina
-  instructions_file: machina_ratiocinatrix.md
-  command: openai
+  verb: command
+  command: think
   server: https://localhost:443
-  apiUrl: https://api.openai.com/v1/responses
 
 app:
   worker_name: localhostapi.js
