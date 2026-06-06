@@ -14,7 +14,7 @@ title: Command
 <div id="commandPopupOverlay" class="popup-overlay" style="display: none;">
     <div class="popup">
         <h3>Enter the command (verb)</h3>
-        <input type="text" id="commandPopupInput" placeholder="Use the verb describing the abstract semantic action that needs to be taken">
+        <input type="text" id="commandPopupInput" placeholder="Use the verb describing the semantic action that needs to be taken.">
         <div style="margin-top: 10px;">
             <button id="commandPopupSaveButton" style="margin-right: 10px;">Use this command, go!</button>
             <button id="commandPopupCancelButton">Cancel</button>

@@ -130,7 +130,7 @@ class MachineApp {
   _handleCommandSave = () => {
     const commandInputVal = this.elements.commandPopupInput.value;
     if (commandInputVal && commandInputVal.trim()) {
-      this.settings.llm.command = commandInputVal.trim();
+      this.settings.machine.verb = commandInputVal.trim();
       console.log('Command set manually via pop-up.');
       hideCommandPopup();
       this.runLlm(); // Optionally, re-trigger the LLM run after getting the command
@@ -299,7 +299,7 @@ class MachineApp {
   };
   
   _ensureCommand = async () => {
-    if (this.settings.llm.command) return true;
+    if (this.settings.machine.verb) return true;
     showCommandPopup(); // Show pop-up to ask for command
     return false; // Indicate that we couldn't get a command
   };
