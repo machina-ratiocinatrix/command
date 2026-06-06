@@ -1,7 +1,6 @@
 // localhostapi.js
 let machineConfig = null;
 let text = null;
-let llmSettings = null;
 let responseData = null;
 
 
@@ -9,7 +8,6 @@ self.onmessage = async function (event) {
 	// Parameters for the localhost call from the main thread
 	machineConfig = event.data.config;
 	console.log('Worker received machine config:', machineConfig);
-	llmSettings = event.data.settings;
 	text = event.data.text;
 	console.log('Worker received text:', text);
 
@@ -17,7 +15,7 @@ self.onmessage = async function (event) {
 	try {
 		// --- 5. Make localhost POST
 		
-		const request = 'Machina-Ratiocinatrix'
+		const request = machineConfig.verb
 		const appendix = encodeURIComponent(request);
 		const base_url = 'https://localhost:443';
 		const url = `${base_url}/${appendix}`;
