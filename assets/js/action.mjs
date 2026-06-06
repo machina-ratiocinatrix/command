@@ -8,8 +8,8 @@ import {
   llmSoupToText
 } from './utilities.mjs';
 import {
-  showcommandPopup,
-  hidecommandPopup
+  showCommandPopup,
+  hideCommandPopup
 } from './command_popup.mjs';
 
 /**
