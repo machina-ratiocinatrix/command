@@ -1,26 +1,41 @@
 ---
 layout: home
-title: Machina Ratiocinatrix
+title: Command
 ---
-# Machina Ratiocinatrix.
-<pre>
-  'Machina Ratiocinatrix' is a term used by Norbert Wiener in the introduction to his 
-  book "Cybernetics, or Control and Communication in the Animal and the Machine".
-</pre>
 
-<pre>
-  Ratiocinatio est oratio ex ipsa re probabile aliquid eliciens, quod expositum et 
-  per se cognitum sua se vi et ratione confirmet.
+# Command
+<div id="machina-config"
+     data-machine-settings="{{ site.machine | jsonify | escape }}"
+     data-github-settings="{{ site.github_settings | jsonify | escape }}"
+     data-app-settings="{{ site.app | jsonify | escape }}"
+     data-lm-settings="{{ site.lm | jsonify | escape }}"
+     data-worker-url="{{ '/assets/js/' | append: site.app.worker_name | relative_url }}"
+     style="display:none;">
+</div>
 
-  Ratiocination is a sort of speaking, eliciting something probable from the fact 
-  under consideration itself, which being explained and known of itself, confirms 
-  itself by its own power and principles.
-                                                 — Marcus Tullius Cicero
-</pre>
+<div id="commandPopupOverlay" class="popup-overlay" style="display: none;">
+    <div class="popup">
+        <h3>Enter the command (verb)</h3>
+        <input type="text" id="commandPopupInput" placeholder="Use the verb describing the semantic action that needs to be taken.">
+        <div style="margin-top: 10px;">
+            <button id="commandPopupSaveButton" style="margin-right: 10px;">Use this command, go!</button>
+            <button id="commandPopupCancelButton">Cancel</button>
+        </div>
+    </div>
+</div>
 
+<div id="loading-overlay" class="popup-overlay" style="display: none;">
+    <div class="popup">
+        <h5>{{ site.machine.name }} is thingking...</h5>
+    </div>
+</div>
 
+<div id="dialogue-content-wrapper"></div>
 
-Machina Ratiocinatrix is an implementation of environment for multi-entity language games conducted by a human philosopher. It has been built for the purpose of exploration of known and yet unknown (but investigated in the process of the game) abilities of contemporary machines, imitating Abstract Intellect (AI).<br>
+<textarea id="dialogue-editor-textarea" class="form-control" style="display: none;"></textarea>
 
-# Archive
-**Βιβλιοθήκη** [here](https://github.com/bibliotheke)
+<div id="file-picker-container" style="display: none;">
+  <button id="chooseFileButton" class="btn btn-primary">Choose File to Load Dialogue</button>
+</div>
+
+<script src="{{ '/assets/js/storage.js' | relative_url }}"></script>
